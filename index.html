@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distinction Vocabulary - Active Recall</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+            },
+            surface: {
+              DEFAULT: '#0b0f19',
+              card: '#131b2e',
+              cardHover: '#18223a',
+              border: '#1f2b48',
+              accent: '#233357'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #080c15;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Custom Glassmorphism & Shadows */
+    .glass-panel {
+      background: rgba(19, 27, 46, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    
+    .glow-indigo {
+      box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Smooth Expansion for Answer Details */
+    .details-collapse {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      opacity: 0;
+    }
+    .details-collapse.open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+    .details-inner {
+      overflow: hidden;
+    }
+
+    /* Keyboard Badge Pill */
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #94a3b8;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 0 1px #0f172a;
+    }
+
+    /* Pulse animation for sync */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .sync-ping {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation / Progress Header -->
+  <header class="w-full glass-panel sticky top-0 z-40 border-b border-surface-border/60">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <span class="font-display font-extrabold text-white text-lg tracking-tight">D</span>
+        </div>
+        <div>
+          <h1 class="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-1.5 font-display">
+            DISTINCTION <span class="text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono font-medium">Flash</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 tracking-tight" id="statusSummary">読み込み中...</p>
+        </div>
+      </div>
+
+      <!-- Sync Status & Stats Badges -->
+      <div class="flex items-center gap-3">
+        <!-- Frequency Breakdown Badges -->
+        <div class="hidden sm:flex items-center gap-1.5 text-xs font-mono">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20" title="高頻度 (未定着: 出題70%)">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span>
+            高: <span id="badgeHigh" class="font-semibold ml-1">0</span>
+          </span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20" title="低頻度 (やや定着: 出題30%)">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5"></span>
+            低: <span id="badgeLow" class="font-semibold ml-1">0</span>
+          </span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" title="非表示 (定着完了: 出題除外)">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+            済: <span id="badgeMastered" class="font-semibold ml-1">0</span>
+          </span>
+        </div>
+
+        <!-- Sync Indicator -->
+        <div id="syncIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800/80 border border-slate-700/60 text-slate-300" title="GAS連携ステータス">
+          <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="syncText" class="text-[11px] hidden md:inline">Ready</span>
+        </div>
+
+        <!-- Setting Gear Button -->
+        <button id="openSettingsBtn" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition border border-transparent hover:border-slate-700/80" aria-label="設定を開く">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Linear Progress Bar -->
+    <div class="w-full h-1 bg-slate-900 overflow-hidden flex">
+      <div id="progressHigh" class="h-full bg-rose-500 transition-all duration-500" style="width: 0%"></div>
+      <div id="progressLow" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+      <div id="progressMastered" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+    </div>
+  </header>
+
+  <!-- Main Learning Screen -->
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-10 max-w-2xl mx-auto w-full relative">
+
+    <!-- Flashcard Component -->
+    <div id="cardContainer" class="w-full glass-panel rounded-3xl p-6 sm:p-9 border border-surface-border glow-indigo relative transition-all duration-300">
+      
+      <!-- Card Header: Tag, Pronunciation, Sound Toggle -->
+      <div class="flex items-center justify-between border-b border-surface-border/50 pb-4 mb-6">
+        <div class="flex items-center gap-2">
+          <!-- Status Tag -->
+          <span id="cardStatusBadge" class="text-xs uppercase font-mono px-2.5 py-0.5 rounded-full font-semibold border">
+            高頻度
+          </span>
+          <!-- ID / Index -->
+          <span id="cardIndexLabel" class="text-xs font-mono text-slate-500">#00</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Speech Auto-play Toggle State Icon -->
+          <button id="toggleAutoVoiceBtn" class="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-indigo-300 transition" title="自動読み上げ ON/OFF (Aキー)">
+            <i data-lucide="volume-2" id="autoVoiceIcon" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span class="font-mono text-[11px]" id="autoVoiceLabel">AUTO</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Word Face (Surface) -->
+      <div class="text-center py-4 sm:py-6">
+        <div class="flex items-center justify-center gap-3 mb-2 flex-wrap">
+          <h2 id="wordHead" class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-display">
+            ---
+          </h2>
+          <!-- Word Audio Button -->
+          <button id="playWordAudioBtn" class="p-2 sm:p-2.5 rounded-2xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:scale-105 active:scale-95 transition-all shadow-md" title="単語を発音 (Rキー)">
+            <i data-lucide="volume-2" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+          </button>
+        </div>
+        
+        <!-- Phonetics / Part of Speech (Optional subtitle) -->
+        <p id="wordPhonetic" class="text-sm font-mono text-indigo-400/80">/ - /</p>
+      </div>
+
+      <!-- Action: Reveal Answer Button (Visible before reveal) -->
+      <div id="revealActionBox" class="pt-4 flex flex-col items-center">
+        <button id="revealBtn" class="w-full py-4 px-6 rounded-2xl bg-surface-accent hover:bg-indigo-600/20 border border-indigo-500/30 text-indigo-200 hover:text-white font-medium flex items-center justify-center gap-2 transition-all duration-200 shadow-md group">
+          <span class="tracking-wide text-sm sm:text-base">答えを表示</span>
+          <span class="kbd text-[11px] group-hover:border-indigo-400">Space</span>
+        </button>
+      </div>
+
+      <!-- Card Reverse Side: Answer Details (Smooth Accordion Expand) -->
+      <div id="detailsCollapse" class="details-collapse">
+        <div class="details-inner pt-6 border-t border-surface-border/60 mt-6 space-y-6">
+          
+          <!-- Meaning Section -->
+          <div>
+            <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1">日本語訳</div>
+            <div id="wordMeaning" class="text-xl sm:text-2xl font-bold text-slate-100">
+              ---
+            </div>
+          </div>
+
+          <!-- Example Sentence -->
+          <div class="bg-slate-900/60 rounded-2xl p-4 sm:p-5 border border-surface-border/70 relative">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono uppercase tracking-wider text-indigo-300 flex items-center gap-1.5 font-medium">
+                <i data-lucide="quote" class="w-3.5 h-3.5"></i>
+                Example
+              </span>
+              <button id="playExampleAudioBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition" title="例文をリスニング">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <p id="wordExample" class="text-sm sm:text-base text-slate-200 font-sans leading-relaxed">
+              ---
+            </p>
+          </div>
+
+          <!-- Distinction Note / Collocation Tips -->
+          <div id="noteBox" class="rounded-2xl p-4 bg-indigo-950/20 border border-indigo-900/40 text-xs sm:text-sm text-slate-300 space-y-1">
+            <div class="font-mono text-indigo-400 font-semibold flex items-center gap-1.5 text-xs">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              Distinction Point / Note
+            </div>
+            <p id="wordNote" class="text-slate-300 leading-relaxed font-sans">
+              ---
+            </p>
+          </div>
+
+          <!-- Status Rating Transition Buttons (1, 2, 3) -->
+          <div class="pt-3">
+            <p class="text-center text-xs font-mono text-slate-400 mb-3">定着度を選択して次へ進む</p>
+            <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+              
+              <!-- 1: High Frequency (Unmastered) -->
+              <button data-status="1" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 transition-all active:scale-95 shadow-sm">
+                <span class="text-xs sm:text-sm font-semibold">高頻度</span>
+                <span class="text-[10px] text-rose-400/80">未定着 (70%)</span>
+                <span class="kbd mt-2 text-[10px] bg-rose-950/40 border-rose-800/60 text-rose-200">1</span>
+              </button>
+
+              <!-- 2: Low Frequency (Partially Mastered) -->
+              <button data-status="2" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 transition-all active:scale-95 shadow-sm">
+                <span class="text-xs sm:text-sm font-semibold">低頻度</span>
+                <span class="text-[10px] text-amber-400/80">やや定着 (30%)</span>
+                <span class="kbd mt-2 text-[10px] bg-amber-950/40 border-amber-800/60 text-amber-200">2</span>
+              </button>
+
+              <!-- 3: Mastered (Excluded) -->
+              <button data-status="3" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 transition-all active:scale-95 shadow-sm">
+                <span class="text-xs sm:text-sm font-semibold">非表示</span>
+                <span class="text-[10px] text-emerald-400/80">定着完了 (除外)</span>
+                <span class="kbd mt-2 text-[10px] bg-emerald-950/40 border-emerald-800/60 text-emerald-200">3</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State Prompt (When all are mastered) -->
+    <div id="allMasteredBox" class="hidden w-full glass-panel rounded-3xl p-8 border border-emerald-500/30 text-center">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/40">
+        <i data-lucide="award" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2 font-display">All Words Mastered!</h3>
+      <p class="text-sm text-slate-300 mb-6">すべての登録単語が「非表示（定着完了）」になりました。素晴らしい成果です！</p>
+      <button id="resetMasteredBtn" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition">
+        定着ステータスをリセットして再開
+      </button>
+    </div>
+
+    <!-- Shortcut Hints in Bottom Footer -->
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 font-mono">
+      <span class="flex items-center gap-1"><span class="kbd">Space</span> 答え</span>
+      <span class="flex items-center gap-1"><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> 判定</span>
+      <span class="flex items-center gap-1"><span class="kbd">R</span> 発音</span>
+      <span class="flex items-center gap-1"><span class="kbd">A</span> 音声AUTO</span>
+    </div>
+  </main>
+
+  <!-- Settings Modal (GAS URL & Instructions) -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-panel w-full max-w-xl rounded-3xl border border-surface-border p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      
+      <!-- Close Button -->
+      <button id="closeSettingsBtn" class="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+          <i data-lucide="database" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-white font-display">Googleスプレッドシート連携</h2>
+          <p class="text-xs text-slate-400">GAS（Google Apps Script）を利用した双方向同期</p>
+        </div>
+      </div>
+
+      <!-- URL Input Section -->
+      <div class="space-y-4 mb-6">
+        <div>
+          <label for="gasUrlInput" class="block text-xs font-mono uppercase text-slate-300 mb-1.5 font-medium">GAS Web App URL (接続済み)</label>
+          <input type="url" id="gasUrlInput" 
+            class="w-full bg-slate-900 border border-indigo-500/50 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 font-mono text-xs">
+          <p class="text-[11px] text-emerald-400/90 mt-1 flex items-center gap-1">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> デプロイID: <code class="font-mono text-indigo-300">AKfycbyQ...</code> (全員アクセス権限確認済み)
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <button id="fetchGasBtn" class="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-2 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            スプレッドシートから再読み込み
+          </button>
+          <button id="saveGasUrlBtn" class="py-2.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs transition border border-slate-700">
+            URLを保存
+          </button>
+        </div>
+      </div>
+
+      <!-- Accordion: GAS Code instructions -->
+      <div class="border-t border-slate-800 pt-5">
+        <details class="group cursor-pointer">
+          <summary class="flex items-center justify-between text-xs font-semibold text-indigo-400 font-mono hover:text-indigo-300">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="code" class="w-4 h-4"></i>
+              スプレッドシート & GASの作成手順・コードを見る
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform"></i>
+          </summary>
+          
+          <div class="mt-4 space-y-3 text-xs text-slate-300 font-sans leading-relaxed">
+            <ol class="list-decimal list-inside space-y-2 text-slate-400">
+              <li>Googleスプレッドシートを新規作成し、1行目のヘッダーを以下に設定します：<br>
+                <code class="text-[11px] font-mono text-indigo-300 bg-slate-900 px-2 py-0.5 rounded mt-1 inline-block">A: Word | B: Meaning | C: Example | D: Note | E: Status | F: UpdatedAt</code>
+              </li>
+              <li>「拡張機能」>「Apps Script」を開き、以下のコードを貼り付けて保存します。</li>
+              <li>「デプロイ」>「新しいデプロイ」> 種類の選択で「ウェブアプリ」を選択。</li>
+              <li>アクセスできるユーザーを「<strong>全員（Anyone）</strong>」にしてデプロイし、生成されたURLを上に貼り付けます。</li>
+            </ol>
+
+            <div class="relative mt-3">
+              <button id="copyGasCodeBtn" class="absolute top-2 right-2 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300 border border-slate-700 flex items-center gap-1">
+                <i data-lucide="copy" class="w-3 h-3"></i> コピー
+              </button>
+              <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto max-h-48"><code id="gasSourceCode">const SHEET_NAME = 'words';
+
+// 単語一覧の取得 (GET)
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    // 'words' シートがない場合は1番目のシートを自動参照（クラッシュ防止）
+    const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+    const rows = sheet.getDataRange().getValues();
+    const data = [];
+
+    for (let i = 1; i &lt; rows.length; i++) {
+      const row = rows[i];
+      if (!row[0]) continue; // 単語が空の行は除外
+      data.push({
+        rowIndex: i + 1,
+        word: String(row[0] || '').trim(),
+        meaning: String(row[1] || '').trim(),
+        example: String(row[2] || '').trim(),
+        note: String(row[3] || '').trim(),
+        status: String(row[4] || '高頻度').trim()
+      });
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: data }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ステータス更新の書き込み (POST)
+function doPost(e) {
+  try {
+    const params = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+    const rowIndex = Number(params.rowIndex);
+    const newStatus = params.status;
+
+    // E列 (ステータス) と F列 (更新日時) を更新
+    sheet.getRange(rowIndex, 5).setValue(newStatus);
+    sheet.getRange(rowIndex, 6).setValue(new Date());
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</code></pre>
+            </div>
+            
+            <!-- Failed to fetch トラブルシューティングガイド -->
+            <div class="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] space-y-1">
+              <div class="font-bold flex items-center gap-1 text-amber-300">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                「Failed to fetch」が出る場合のチェックポイント
+              </div>
+              <ul class="list-disc list-inside space-y-1 text-amber-200/90 pl-1">
+                <li><strong>アクセス権限：</strong>GASの「デプロイを管理」で「アクセスできるユーザー」が<strong>「全員（Anyone）」</strong>になっているか確認（「自分のみ」だとCORSエラーになります）。</li>
+                <li><strong>デプロイの更新：</strong>コード修正後は「新しいデプロイ」または「デプロイを管理」→「編集」→<strong>「新バージョン」</strong>を選択して保存してください。</li>
+                <li><strong>シート名：</strong>スプレッドシートのタブ名が「words」になっているか確認（上記修正コードを貼ればタブ名が何でも自動認識します）。</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Toast UI (No alerts used) -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-slate-700 shadow-2xl text-xs font-medium text-slate-200">
+    <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-indigo-400"></i>
+    <span id="toastMessage">通知メッセージ</span>
+  </div>
+
+  <script>
+    // スプレッドシート（wordsシート）の実データと完全同期した単語マスター
+    const DEFAULT_WORDS = [
+      {
+        rowIndex: 2,
+        word: "prioritize",
+        meaning: "優先順位をつける、重視する",
+        example: "We need to prioritize tasks based on their urgency and impact.",
+        note: "動詞。priority（優先度）の動詞形。ビジネスの意思決定やタスク管理で頻出。",
+        status: 1
+      },
+      {
+        rowIndex: 3,
+        word: "streamline",
+        meaning: "業務を効率化・合理化する",
+        example: "The company is streamlining operations to reduce overhead costs.",
+        note: "「流線形にする」から派生。無駄な手順や人的コストを削ぎ落とすニュアンス。",
+        status: 1
+      },
+      {
+        rowIndex: 4,
+        word: "bottleneck",
+        meaning: "進捗を妨げるボトルネック、隘路",
+        example: "The manual verification step is the main bottleneck in our workflow.",
+        note: "瓶の首のように狭い部分。サプライチェーンや業務プロセスの停滞箇所を指す定番語。",
+        status: 1
+      },
+      {
+        rowIndex: 5,
+        word: "deliverable",
+        meaning: "成果物・納品物",
+        example: "Please list all the deliverables expected by the end of Q3.",
+        note: "契約やプロジェクト管理で提出すべき具体的な成果物・中間成果物。",
+        status: 1
+      },
+      {
+        rowIndex: 6,
+        word: "actionable",
+        meaning: "実行可能な、具体的なアクションにつながる",
+        example: "We need actionable insights rather than theoretical observations.",
+        note: "「行動を起こせる」という意味。会議のネクストアクション策定で頻出。",
+        status: 1
+      },
+      {
+        rowIndex: 7,
+        word: "align with",
+        meaning: "〜と方針・認識を合わせる、整合させる",
+        example: "Let's make sure our design aligns with the core brand values.",
+        note: "句動詞。プロジェクトの方向性や他部署・ステークホルダーとの目線合わせに多用。",
+        status: 1
+      },
+      {
+        rowIndex: 8,
+        word: "touch base",
+        meaning: "近況を共有する、連絡を取り合う",
+        example: "Let's touch base next week after the client review.",
+        note: "カジュアルなビジネス連絡。短時間のミーティングや状況確認でネイティブが多用。",
+        status: 1
+      },
+      {
+        rowIndex: 9,
+        word: "leverage",
+        meaning: "〜を活用する、テコ入れする",
+        example: "We can leverage our existing customer base to test the new feature.",
+        note: "元は名詞（てこの力）。強みや既存リソースを最大化して使う場面で頻出。",
+        status: 1
+      },
+      {
+        rowIndex: 10,
+        word: "overhaul",
+        meaning: "全面的に見直す、徹底的に分解点検する",
+        example: "The team decided to overhaul the entire legacy codebase.",
+        note: "一部修正ではなく全体的な抜本改革・システム刷新を行う際に使用。",
+        status: 1
+      },
+      {
+        rowIndex: 11,
+        word: "feasibility",
+        meaning: "実現可能性",
+        example: "We are conducting a feasibility study before committing resources.",
+        note: "feasible（実現可能な）の名詞形。feasibility study（実現可能性調査）で頻出。",
+        status: 1
+      },
+      {
+        rowIndex: 12,
+        word: "contingency",
+        meaning: "不測の事態、緊急時対応",
+        example: "We have a contingency plan in case the server deployment fails.",
+        note: "contingency plan（緊急時対応計画・BCP）として多用される重要語。",
+        status: 1
+      },
+      {
+        rowIndex: 13,
+        word: "delegate",
+        meaning: "権限や仕事を委任・分担する",
+        example: "A good manager knows how to effectively delegate responsibilities.",
+        note: "自分で抱え込まずチームメンバーに任せるニュアンス。マネジメント必須単語。",
+        status: 1
+      },
+      {
+        rowIndex: 14,
+        word: "accountability",
+        meaning: "説明責任、結果に対する責任",
+        example: "Clear accountability leads to higher team ownership and quality.",
+        note: "単なる「義務」ではなく結果に対して全責任を持つこと。",
+        status: 1
+      },
+      {
+        rowIndex: 15,
+        word: "benchmark",
+        meaning: "基準、指標（比較評価のための尺度）",
+        example: "We use their operational efficiency as a benchmark for our goals.",
+        note: "他社や過去の成果と比較評価するための標準尺度。",
+        status: 1
+      },
+      {
+        rowIndex: 16,
+        word: "discrepancy",
+        meaning: "相違、食い違い、不一致",
+        example: "There is a significant discrepancy between the forecasted and actual sales.",
+        note: "数字やデータが一致しないときに使われるフォーマルな表現。",
+        status: 1
+      },
+      {
+        rowIndex: 17,
+        word: "pragmatic",
+        meaning: "実践的な、現実的な実利主義の",
+        example: "We need to take a pragmatic approach rather than an idealistic one.",
+        note: "理想論ではなく現実の制約や状況に即した判断を下すこと。",
+        status: 1
+      },
+      {
+        rowIndex: 18,
+        word: "tentative",
+        meaning: "暫定的な、仮の",
+        example: "We have set a tentative deadline for the proposal submission.",
+        note: "確定前のアポイントや日程調整（tentative schedule）で非常によく使われる。",
+        status: 1
+      }
+    ];
+
+    const STORAGE_KEY_WORDS = 'distinction_vocab_list_v2';
+    const STORAGE_KEY_GAS_URL = 'distinction_gas_web_app_url';
+    const STORAGE_KEY_AUTO_VOICE = 'distinction_auto_voice_enabled';
+
+    // 固定のGoogle Apps Script Web App URL
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyQznwgR84EXzXAeUTR5uvT0LPe6ked0pyqDC1zyy8fiz5zJnaqwXIH7n9ur2lR-Hpy/exec';
+
+    // ステータスコードとシート文字列の相互変換マップ
+    const STATUS_MAP = {
+      1: '高頻度',
+      2: '低頻度',
+      3: '非表示'
+    };
+
+    function parseStatusToNumber(val) {
+      if (val === '低頻度' || val === 2 || val === '2') return 2;
+      if (val === '非表示' || val === 3 || val === '3') return 3;
+      return 1; // デフォルトは高頻度
+    }
+
+    let wordsData = [];
+    let currentWord = null;
+    let lastWordId = null;
+    let isAnswerRevealed = false;
+    let autoVoiceEnabled = true;
+    let gasAppUrl = DEFAULT_GAS_URL;
+
+    // DOM Elements
+    const elements = {
+      cardContainer: document.getElementById('cardContainer'),
+      wordHead: document.getElementById('wordHead'),
+      wordPhonetic: document.getElementById('wordPhonetic'),
+      wordMeaning: document.getElementById('wordMeaning'),
+      wordExample: document.getElementById('wordExample'),
+      wordNote: document.getElementById('wordNote'),
+      cardStatusBadge: document.getElementById('cardStatusBadge'),
+      cardIndexLabel: document.getElementById('cardIndexLabel'),
+      revealActionBox: document.getElementById('revealActionBox'),
+      revealBtn: document.getElementById('revealBtn'),
+      detailsCollapse: document.getElementById('detailsCollapse'),
+      playWordAudioBtn: document.getElementById('playWordAudioBtn'),
+      playExampleAudioBtn: document.getElementById('playExampleAudioBtn'),
+      toggleAutoVoiceBtn: document.getElementById('toggleAutoVoiceBtn'),
+      autoVoiceIcon: document.getElementById('autoVoiceIcon'),
+      autoVoiceLabel: document.getElementById('autoVoiceLabel'),
+      badgeHigh: document.getElementById('badgeHigh'),
+      badgeLow: document.getElementById('badgeLow'),
+      badgeMastered: document.getElementById('badgeMastered'),
+      statusSummary: document.getElementById('statusSummary'),
+      progressHigh: document.getElementById('progressHigh'),
+      progressLow: document.getElementById('progressLow'),
+      progressMastered: document.getElementById('progressMastered'),
+      syncIndicator: document.getElementById('syncIndicator'),
+      syncDot: document.getElementById('syncDot'),
+      syncText: document.getElementById('syncText'),
+      settingsModal: document.getElementById('settingsModal'),
+      openSettingsBtn: document.getElementById('openSettingsBtn'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      gasUrlInput: document.getElementById('gasUrlInput'),
+      saveGasUrlBtn: document.getElementById('saveGasUrlBtn'),
+      fetchGasBtn: document.getElementById('fetchGasBtn'),
+      copyGasCodeBtn: document.getElementById('copyGasCodeBtn'),
+      gasSourceCode: document.getElementById('gasSourceCode'),
+      allMasteredBox: document.getElementById('allMasteredBox'),
+      resetMasteredBtn: document.getElementById('resetMasteredBtn'),
+      toast: document.getElementById('toast'),
+      toastMessage: document.getElementById('toastMessage'),
+      toastIcon: document.getElementById('toastIcon'),
+    };
+
+    let toastTimeout = null;
+    function showToast(message, type = 'info') {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      elements.toastMessage.textContent = message;
+      
+      const icon = elements.toast.querySelector('i');
+      if (type === 'success') {
+        elements.toast.className = "fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-emerald-500/40 shadow-2xl text-xs font-medium text-emerald-200";
+        elements.toastIcon.setAttribute('data-lucide', 'check-circle');
+      } else if (type === 'error') {
+        elements.toast.className = "fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-rose-500/40 shadow-2xl text-xs font-medium text-rose-200";
+        elements.toastIcon.setAttribute('data-lucide', 'alert-circle');
+      } else {
+        elements.toast.className = "fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-indigo-500/40 shadow-2xl text-xs font-medium text-indigo-200";
+        elements.toastIcon.setAttribute('data-lucide', 'info');
+      }
+      lucide.createIcons();
+
+      toastTimeout = setTimeout(() => {
+        elements.toast.classList.replace('translate-y-0', 'translate-y-16');
+        elements.toast.classList.replace('opacity-100', 'opacity-0');
+      }, 3000);
+    }
+
+    function setSyncStatus(state, message) {
+      if (state === 'syncing') {
+        elements.syncDot.className = 'w-2 h-2 rounded-full bg-amber-400 sync-ping';
+        elements.syncText.textContent = message || '同期中...';
+      } else if (state === 'error') {
+        elements.syncDot.className = 'w-2 h-2 rounded-full bg-rose-400';
+        elements.syncText.textContent = message || '同期エラー';
+      } else if (state === 'warning') {
+        elements.syncDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        elements.syncText.textContent = message || 'ローカル実行中';
+      } else {
+        elements.syncDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        elements.syncText.textContent = message || 'Ready';
+      }
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) {
+        showToast('お使いのブラウザは音声合成に対応していません', 'error');
+        return;
+      }
+      window.speechSynthesis.cancel(); // Stop any pending speech
+      
+      const cleanText = text.replace(/<[^>]*>?/gm, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9; // Natural listening speed as specified
+      utterance.pitch = 1.0;
+
+      // Select preferred en-US voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const usVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Alex')));
+      if (usVoice) utterance.voice = usVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleAutoVoice() {
+      autoVoiceEnabled = !autoVoiceEnabled;
+      localStorage.setItem(STORAGE_KEY_AUTO_VOICE, autoVoiceEnabled ? '1' : '0');
+      updateAutoVoiceUI();
+      showToast(`自動読み上げ: ${autoVoiceEnabled ? '有効' : '無効'}`, 'info');
+    }
+
+    function updateAutoVoiceUI() {
+      if (autoVoiceEnabled) {
+        elements.autoVoiceIcon.className = "w-3.5 h-3.5 text-indigo-400";
+        elements.autoVoiceLabel.textContent = "AUTO ON";
+        elements.toggleAutoVoiceBtn.classList.remove('opacity-60');
+      } else {
+        elements.autoVoiceIcon.className = "w-3.5 h-3.5 text-slate-500";
+        elements.autoVoiceLabel.textContent = "AUTO OFF";
+        elements.toggleAutoVoiceBtn.classList.add('opacity-60');
+      }
+    }
+
+    /**
+     * Distinction Algorithm:
+     * - Status 1 (High Frequency / Unmastered): 70% weight
+     * - Status 2 (Low Frequency / Partial): 30% weight
+     * - Status 3 (Mastered): Excluded from active queue
+     * - Avoid back-to-back repeats of the same word (lastWordId)
+     */
+    function pickNextWord() {
+      const highList = wordsData.filter(w => w.status === 1);
+      const lowList = wordsData.filter(w => w.status === 2);
+
+      // If both pools are empty, all active words have been mastered!
+      if (highList.length === 0 && lowList.length === 0) {
+        return null;
+      }
+
+      let chosenList = null;
+
+      if (highList.length > 0 && lowList.length > 0) {
+        // 70% chance for High, 30% chance for Low
+        const roll = Math.random();
+        chosenList = roll < 0.70 ? highList : lowList;
+      } else if (highList.length > 0) {
+        chosenList = highList;
+      } else {
+        chosenList = lowList;
+      }
+
+      // Filter out immediate repeat if multiple words exist in pool
+      let candidates = chosenList;
+      if (candidates.length > 1 && lastWordId !== null) {
+        const withoutLast = candidates.filter(w => (w.rowIndex || w.word) !== lastWordId);
+        if (withoutLast.length > 0) {
+          candidates = withoutLast;
+        }
+      }
+
+      const randomIndex = Math.floor(Math.random() * candidates.length);
+      return candidates[randomIndex];
+    }
+
+    function renderCurrentWord() {
+      currentWord = pickNextWord();
+      isAnswerRevealed = false;
+
+      updateStatsDisplay();
+
+      if (!currentWord) {
+        // All words are mastered
+        elements.cardContainer.classList.add('hidden');
+        elements.allMasteredBox.classList.remove('hidden');
+        return;
+      }
+
+      elements.cardContainer.classList.remove('hidden');
+      elements.allMasteredBox.classList.add('hidden');
+
+      lastWordId = currentWord.rowIndex || currentWord.word;
+
+      // Populate Word surface
+      elements.wordHead.textContent = currentWord.word;
+      elements.wordPhonetic.textContent = currentWord.status === 1 ? 'Focus Word' : 'Review Word';
+      elements.cardIndexLabel.textContent = `#${currentWord.rowIndex || '01'}`;
+
+      // Set Status Badge styling
+      if (currentWord.status === 1) {
+        elements.cardStatusBadge.textContent = "高頻度 (70%)";
+        elements.cardStatusBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded-full font-semibold border bg-rose-500/10 text-rose-300 border-rose-500/30";
+      } else {
+        elements.cardStatusBadge.textContent = "低頻度 (30%)";
+        elements.cardStatusBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded-full font-semibold border bg-amber-500/10 text-amber-300 border-amber-500/30";
+      }
+
+      // Populate Answer details
+      elements.wordMeaning.textContent = currentWord.meaning;
+      elements.wordExample.textContent = currentWord.example || "No example sentence provided.";
+      elements.wordNote.textContent = currentWord.note || "日常会話およびビジネスの文脈で自然に使われる表現です。";
+
+      // Reset accordion state to closed
+      elements.detailsCollapse.classList.remove('open');
+      elements.revealActionBox.classList.remove('hidden');
+
+      // Auto speech playback
+      if (autoVoiceEnabled) {
+        setTimeout(() => {
+          speakText(currentWord.word);
+        }, 120);
+      }
+    }
+
+    function revealAnswer() {
+      if (isAnswerRevealed || !currentWord) return;
+      isAnswerRevealed = true;
+      elements.revealActionBox.classList.add('hidden');
+      elements.detailsCollapse.classList.add('open');
+    }
+
+    function updateStatsDisplay() {
+      const highCount = wordsData.filter(w => w.status === 1).length;
+      const lowCount = wordsData.filter(w => w.status === 2).length;
+      const masteredCount = wordsData.filter(w => w.status === 3).length;
+      const total = wordsData.length;
+
+      elements.badgeHigh.textContent = highCount;
+      elements.badgeLow.textContent = lowCount;
+      elements.badgeMastered.textContent = masteredCount;
+
+      elements.statusSummary.textContent = `総語数: ${total} 語 (学習中: ${highCount + lowCount} 語)`;
+
+      if (total > 0) {
+        elements.progressHigh.style.width = `${(highCount / total) * 100}%`;
+        elements.progressLow.style.width = `${(lowCount / total) * 100}%`;
+        elements.progressMastered.style.width = `${(masteredCount / total) * 100}%`;
+      }
+    }
+
+    async function handleStatusSelect(newStatus) {
+      if (!currentWord) return;
+
+      const targetWord = currentWord;
+      const targetRowIndex = targetWord.rowIndex;
+
+      // 1. Optimistic Local State Update
+      targetWord.status = newStatus;
+      saveLocalWords();
+
+      // 2. Immediate transition to next card (Snappy UI)
+      renderCurrentWord();
+
+      // 3. Background Asynchronous POST to Google Apps Script
+      if (gasAppUrl && targetRowIndex) {
+        setSyncStatus('syncing', 'シート同期中...');
+        try {
+          // スプレッドシートのE列形式（'高頻度' / '低頻度' / '非表示'）に変換して送信
+          const payload = JSON.stringify({
+            rowIndex: targetRowIndex,
+            status: STATUS_MAP[newStatus] || '高頻度'
+          });
+
+          // Google Apps Script doPost redirects (302) are handled transparently.
+          await fetch(gasAppUrl, {
+            method: 'POST',
+            mode: 'no-cors', // Essential for seamless GAS Web App posting
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: payload
+          });
+
+          setSyncStatus('ready', '同期完了');
+        } catch (err) {
+          console.warn('GAS Sync warning (cached locally):', err);
+          setSyncStatus('error', '同期失敗 (ローカル保持)');
+        }
+      }
+    }
+
+    function saveLocalWords() {
+      try {
+        localStorage.setItem(STORAGE_KEY_WORDS, JSON.stringify(wordsData));
+      } catch (e) {
+        console.error('Failed to save to localStorage', e);
+      }
+    }
+
+    async function fetchFromGas(url) {
+      if (!url) return;
+      setSyncStatus('syncing', 'データ取得中...');
+      let resJson = null;
+
+      // 1. 直接 fetch の試行
+      try {
+        const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+        if (response.ok) {
+          resJson = await response.json();
+        }
+      } catch (directErr) {
+        console.warn('直接通信が制限されたため、フォールバック接続を試行します:', directErr.message);
+      }
+
+      // 2. iframe等のCORS制約を回避するためのフォールバックProxy試行
+      if (!resJson) {
+        try {
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+          const proxyRes = await fetch(proxyUrl);
+          if (proxyRes.ok) {
+            resJson = await proxyRes.json();
+          }
+        } catch (proxyErr) {
+          console.warn('フォールバックProxy通信も失敗しました:', proxyErr.message);
+        }
+      }
+
+      // 3. データ適用判定
+      if (resJson && (resJson.status === 'success' || Array.isArray(resJson.data) || Array.isArray(resJson))) {
+        const rawList = Array.isArray(resJson) ? resJson : (resJson.data || []);
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          wordsData = rawList.map(item => ({
+            ...item,
+            status: parseStatusToNumber(item.status)
+          }));
+
+          saveLocalWords();
+          setSyncStatus('ready', 'シート同期完了');
+          showToast(`${wordsData.length} 件の単語をシートから同期しました`, 'success');
+          renderCurrentWord();
+          return;
+        }
+      }
+
+      // 通信が通らない場合でもアプリが停止しないよう、キャッシュ／ローカルデータで継続
+      setSyncStatus('warning', 'ローカル動作中');
+      showToast('GASのアクセス権限を確認してください（ローカルデータで学習可能）', 'info');
+    }
+
+    function initData() {
+      // 1. Load auto voice preference
+      const autoSaved = localStorage.getItem(STORAGE_KEY_AUTO_VOICE);
+      autoVoiceEnabled = autoSaved === null ? true : autoSaved === '1';
+      updateAutoVoiceUI();
+
+      // 2. Load GAS App URL (固定URLをデフォルトとして適用)
+      gasAppUrl = localStorage.getItem(STORAGE_KEY_GAS_URL) || DEFAULT_GAS_URL;
+      elements.gasUrlInput.value = gasAppUrl;
+
+      // 3. Load Cached or Mock Words
+      const cached = localStorage.getItem(STORAGE_KEY_WORDS);
+      if (cached) {
+        try {
+          wordsData = JSON.parse(cached);
+        } catch(e) {
+          wordsData = [...DEFAULT_WORDS];
+        }
+      } else {
+        wordsData = [...DEFAULT_WORDS];
+        saveLocalWords();
+      }
+
+      // 初回表示
+      renderCurrentWord();
+
+      // 4. 固定URLから最新のスプレッドシートデータを自動同期
+      if (gasAppUrl) {
+        fetchFromGas(gasAppUrl);
+      } else {
+        setSyncStatus('ready', 'Local Ready');
+      }
+    }
+
+    // Reveal Answer Click
+    elements.revealBtn.addEventListener('click', revealAnswer);
+
+    // Audio Play Buttons
+    elements.playWordAudioBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentWord) speakText(currentWord.word);
+    });
+
+    elements.playExampleAudioBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentWord && currentWord.example) speakText(currentWord.example);
+    });
+
+    // Auto Voice Toggle
+    elements.toggleAutoVoiceBtn.addEventListener('click', toggleAutoVoice);
+
+    // Rating Buttons (1, 2, 3)
+    document.querySelectorAll('.status-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const status = Number(btn.getAttribute('data-status'));
+        handleStatusSelect(status);
+      });
+    });
+
+    // Reset Mastered
+    elements.resetMasteredBtn.addEventListener('click', () => {
+      wordsData.forEach(w => w.status = 1);
+      saveLocalWords();
+      showToast('すべての単語を高頻度（未定着）にリセットしました', 'success');
+      renderCurrentWord();
+    });
+
+    // Settings Modal
+    elements.openSettingsBtn.addEventListener('click', () => {
+      elements.settingsModal.classList.remove('hidden');
+    });
+    elements.closeSettingsBtn.addEventListener('click', () => {
+      elements.settingsModal.classList.add('hidden');
+    });
+    elements.settingsModal.addEventListener('click', (e) => {
+      if (e.target === elements.settingsModal) {
+        elements.settingsModal.classList.add('hidden');
+      }
+    });
+
+    // Save GAS URL
+    elements.saveGasUrlBtn.addEventListener('click', () => {
+      const url = elements.gasUrlInput.value.trim();
+      gasAppUrl = url;
+      localStorage.setItem(STORAGE_KEY_GAS_URL, url);
+      showToast('GAS Web App URL を保存しました', 'success');
+      if (url) {
+        fetchFromGas(url);
+      }
+      elements.settingsModal.classList.add('hidden');
+    });
+
+    // Fetch button in Settings
+    elements.fetchGasBtn.addEventListener('click', () => {
+      const url = elements.gasUrlInput.value.trim();
+      if (!url) {
+        showToast('GAS URL を入力してください', 'error');
+        return;
+      }
+      gasAppUrl = url;
+      localStorage.setItem(STORAGE_KEY_GAS_URL, url);
+      fetchFromGas(url);
+    });
+
+    // Copy GAS code button
+    elements.copyGasCodeBtn.addEventListener('click', () => {
+      const code = elements.gasSourceCode.textContent;
+      const tempInput = document.createElement('textarea');
+      tempInput.value = code;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('GASコードをクリップボードにコピーしました', 'success');
+    });
+
+    // Global Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Ignore if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const key = e.key.toLowerCase();
+
+      if (e.code === 'Space' || e.key === 'Enter') {
+        e.preventDefault();
+        if (!isAnswerRevealed) {
+          revealAnswer();
+        }
+      } else if (key === '1') {
+        e.preventDefault();
+        handleStatusSelect(1);
+      } else if (key === '2') {
+        e.preventDefault();
+        handleStatusSelect(2);
+      } else if (key === '3') {
+        e.preventDefault();
+        handleStatusSelect(3);
+      } else if (key === 'r') {
+        e.preventDefault();
+        if (currentWord) speakText(currentWord.word);
+      } else if (key === 'a') {
+        e.preventDefault();
+        toggleAutoVoice();
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initData();
+    });
+  </script>
+</body>
+</html>
