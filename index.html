@@ -122,7 +122,6 @@
       
       <!-- Left side: Back to Menu / Logo -->
       <div class="flex items-center space-x-3">
-        <!-- Back to Menu Button (Visible in study screen) -->
         <button id="navBackBtn" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700/80 transition-all active:scale-95 shadow-sm">
           <i data-lucide="arrow-left" class="w-4 h-4"></i>
           <span class="hidden sm:inline">メニュー（保存）</span>
@@ -142,9 +141,8 @@
         </div>
       </div>
 
-      <!-- Right side: Stats, Sync status, Settings -->
+      <!-- Right side: Badges, Sync status, Settings -->
       <div class="flex items-center gap-2.5">
-        <!-- Frequency Breakdown Badges -->
         <div class="hidden sm:flex items-center gap-1.5 text-xs font-mono">
           <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20" title="高頻度 (未定着)">
             <span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span>
@@ -160,13 +158,11 @@
           </span>
         </div>
 
-        <!-- Sync Indicator Button -->
         <button id="syncStatusBtn" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:bg-slate-700 transition" title="通信状態を確認・診断">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
           <span id="syncText" class="text-[11px]">確認中...</span>
         </button>
 
-        <!-- Settings Button -->
         <button id="openSettingsBtn" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition border border-transparent hover:border-slate-700/80" aria-label="設定">
           <i data-lucide="settings" class="w-4 h-4 sm:w-5 sm:h-5"></i>
         </button>
@@ -197,10 +193,9 @@
       </p>
     </div>
 
-    <!-- Mode Selection Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto w-full mb-6">
       
-      <!-- Mode 1: Random (Balanced Weight) -->
+      <!-- Mode 1: Random -->
       <button data-mode="random" class="mode-select-card group text-left glass-panel p-5 rounded-2xl border border-surface-border hover:border-indigo-500/60 hover:bg-surface-cardHover transition-all duration-200 active:scale-[0.99] relative overflow-hidden">
         <div class="flex items-start justify-between mb-3">
           <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 group-hover:scale-110 transition-transform">
@@ -222,7 +217,7 @@
         </div>
       </button>
 
-      <!-- Mode 2: Unstudied (Review Count == 0) -->
+      <!-- Mode 2: Unstudied -->
       <button data-mode="unstudied" class="mode-select-card group text-left glass-panel p-5 rounded-2xl border border-surface-border hover:border-sky-500/60 hover:bg-surface-cardHover transition-all duration-200 active:scale-[0.99] relative overflow-hidden">
         <div class="flex items-start justify-between mb-3">
           <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 group-hover:scale-110 transition-transform">
@@ -244,7 +239,7 @@
         </div>
       </button>
 
-      <!-- Mode 3: 50 Words Fixed Loop -->
+      <!-- Mode 3: Focus 50 -->
       <button data-mode="focus50" class="mode-select-card group text-left glass-panel p-5 rounded-2xl border border-surface-border hover:border-amber-500/60 hover:bg-surface-cardHover transition-all duration-200 active:scale-[0.99] relative overflow-hidden">
         <div class="flex items-start justify-between mb-3">
           <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 transition-transform">
@@ -268,7 +263,7 @@
         </div>
       </button>
 
-      <!-- Mode 4: Mastered Review (Hidden Words) -->
+      <!-- Mode 4: Mastered -->
       <button data-mode="mastered" class="mode-select-card group text-left glass-panel p-5 rounded-2xl border border-surface-border hover:border-emerald-500/60 hover:bg-surface-cardHover transition-all duration-200 active:scale-[0.99] relative overflow-hidden">
         <div class="flex items-start justify-between mb-3">
           <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
@@ -292,7 +287,7 @@
 
     </div>
 
-    <!-- 50 Words Reset & Refresh Controller Box -->
+    <!-- 50 Words Reset Box -->
     <div class="max-w-2xl mx-auto w-full glass-panel rounded-2xl p-4 border border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2 text-slate-300">
         <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
@@ -309,28 +304,23 @@
   <!-- ======================== VIEW 2: STUDY SCREEN ======================== -->
   <main id="studyScreen" class="hidden flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-10 max-w-2xl mx-auto w-full relative">
 
-    <!-- Flashcard Component -->
     <div id="cardContainer" class="w-full glass-panel rounded-3xl p-6 sm:p-9 border border-surface-border glow-indigo relative transition-all duration-300">
       
-      <!-- Card Header: Tag, Pronunciation, Sound Toggle, Review Count -->
+      <!-- Card Header -->
       <div class="flex items-center justify-between border-b border-surface-border/50 pb-4 mb-6">
         <div class="flex items-center gap-2 flex-wrap">
-          <!-- Status Tag -->
           <span id="cardStatusBadge" class="text-xs uppercase font-mono px-2.5 py-0.5 rounded-full font-semibold border">
             高頻度
           </span>
-          <!-- Review Count Badge -->
           <span id="cardReviewBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700" title="これまでの出題回数">
             出題: <span id="cardReviewCount" class="font-bold text-indigo-300">0</span>回
           </span>
-          <!-- Mode info label -->
           <span id="studyModeIndicator" class="text-[11px] font-mono text-indigo-400/80">
             [ランダム]
           </span>
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Speech Auto-play Toggle State Button -->
           <button id="toggleAutoVoiceBtn" class="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-indigo-300 transition" title="自動読み上げ ON/OFF (Aキー)">
             <i data-lucide="volume-2" id="autoVoiceIcon" class="w-3.5 h-3.5 text-indigo-400"></i>
             <span class="font-mono text-[11px]" id="autoVoiceLabel">AUTO</span>
@@ -338,22 +328,20 @@
         </div>
       </div>
 
-      <!-- Word Face (Surface) -->
+      <!-- Word Face -->
       <div class="text-center py-4 sm:py-6">
         <div class="flex items-center justify-center gap-3 mb-2 flex-wrap">
           <h2 id="wordHead" class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-display">
             ---
           </h2>
-          <!-- Word Audio Button -->
           <button id="playWordAudioBtn" class="p-2 sm:p-2.5 rounded-2xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:scale-105 active:scale-95 transition-all shadow-md" title="単語を発音 (Rキー)">
             <i data-lucide="volume-2" class="w-5 h-5 sm:w-6 sm:h-6"></i>
           </button>
         </div>
-        
         <p id="wordPhonetic" class="text-xs sm:text-sm font-mono text-indigo-400/80">Focus Word</p>
       </div>
 
-      <!-- Action: Reveal Answer Button -->
+      <!-- Reveal Button -->
       <div id="revealActionBox" class="pt-4 flex flex-col items-center">
         <button id="revealBtn" class="w-full py-4 px-6 rounded-2xl bg-surface-accent hover:bg-indigo-600/20 border border-indigo-500/30 text-indigo-200 hover:text-white font-medium flex items-center justify-center gap-2 transition-all duration-200 shadow-md group">
           <span class="tracking-wide text-sm sm:text-base">答えを表示</span>
@@ -361,11 +349,10 @@
         </button>
       </div>
 
-      <!-- Card Reverse Side: Answer Details -->
+      <!-- Details Section -->
       <div id="detailsCollapse" class="details-collapse">
         <div class="details-inner pt-6 border-t border-surface-border/60 mt-6 space-y-6">
           
-          <!-- Meaning Section -->
           <div>
             <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1">日本語訳</div>
             <div id="wordMeaning" class="text-xl sm:text-2xl font-bold text-slate-100">
@@ -373,7 +360,6 @@
             </div>
           </div>
 
-          <!-- Example Sentence -->
           <div class="bg-slate-900/60 rounded-2xl p-4 sm:p-5 border border-surface-border/70 relative">
             <div class="flex items-center justify-between mb-2">
               <span class="text-[11px] font-mono uppercase tracking-wider text-indigo-300 flex items-center gap-1.5 font-medium">
@@ -389,7 +375,6 @@
             </p>
           </div>
 
-          <!-- Distinction Note / Collocation Tips -->
           <div id="noteBox" class="rounded-2xl p-4 bg-indigo-950/20 border border-indigo-900/40 text-xs sm:text-sm text-slate-300 space-y-1">
             <div class="font-mono text-indigo-400 font-semibold flex items-center gap-1.5 text-xs">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -400,26 +385,22 @@
             </p>
           </div>
 
-          <!-- Status Rating Transition Buttons (1, 2, 3) -->
+          <!-- Status Rating Buttons -->
           <div class="pt-3">
             <p class="text-center text-xs font-mono text-slate-400 mb-3">定着度を選択して次へ（出題回数が加算されます）</p>
             <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
-              
-              <!-- 1: High Frequency -->
               <button data-status="1" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 transition-all active:scale-95 shadow-sm">
                 <span class="text-xs sm:text-sm font-semibold">高頻度</span>
                 <span class="text-[10px] text-rose-400/80">未定着 (70%)</span>
                 <span class="kbd mt-2 text-[10px] bg-rose-950/40 border-rose-800/60 text-rose-200">1</span>
               </button>
 
-              <!-- 2: Low Frequency -->
               <button data-status="2" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 transition-all active:scale-95 shadow-sm">
                 <span class="text-xs sm:text-sm font-semibold">低頻度</span>
                 <span class="text-[10px] text-amber-400/80">やや定着 (30%)</span>
                 <span class="kbd mt-2 text-[10px] bg-amber-950/40 border-amber-800/60 text-amber-200">2</span>
               </button>
 
-              <!-- 3: Mastered -->
               <button data-status="3" class="status-btn group flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 transition-all active:scale-95 shadow-sm">
                 <span class="text-xs sm:text-sm font-semibold">非表示</span>
                 <span class="text-[10px] text-emerald-400/80">定着完了 (除外)</span>
@@ -432,7 +413,7 @@
       </div>
     </div>
 
-    <!-- Empty State Prompt -->
+    <!-- Empty State -->
     <div id="emptyPoolBox" class="hidden w-full glass-panel rounded-3xl p-8 border border-indigo-500/30 text-center">
       <div class="w-16 h-16 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 border border-indigo-500/40">
         <i data-lucide="check-circle" class="w-8 h-8"></i>
@@ -444,7 +425,6 @@
       </button>
     </div>
 
-    <!-- Bottom Shortcut Hints & Back Action -->
     <div class="mt-6 flex flex-col items-center gap-3">
       <div class="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 font-mono">
         <span class="flex items-center gap-1"><span class="kbd">Space</span> 答え</span>
@@ -476,7 +456,6 @@
         </div>
       </div>
 
-      <!-- URL Input Section -->
       <div class="space-y-4 mb-6">
         <div>
           <label for="gasUrlInput" class="block text-xs font-mono uppercase text-slate-300 mb-1.5 font-medium">GAS Web App URL</label>
@@ -498,12 +477,10 @@
           </button>
         </div>
 
-        <!-- Diagnostic Output Area -->
         <div id="diagnosticOutput" class="hidden mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1">
         </div>
       </div>
 
-      <!-- Reset Local Memory Button -->
       <div class="border-t border-slate-800 pt-4 flex items-center justify-between text-xs">
         <div>
           <p class="font-semibold text-slate-300">50単語セッションのクリア</p>
@@ -517,7 +494,7 @@
     </div>
   </div>
 
-  <!-- Notification Toast UI -->
+  <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-slate-700 shadow-2xl text-xs font-medium text-slate-200 pointer-events-none">
     <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-indigo-400"></i>
     <span id="toastMessage">通知メッセージ</span>
@@ -535,7 +512,6 @@
       });
     }
 
-    // Default Vocab Data with reviewCount
     const DEFAULT_WORDS = [
       { rowIndex: 2, word: "prioritize", meaning: "優先順位をつける、重視する", example: "We need to prioritize tasks based on their urgency and impact.", note: "動詞。priority（優先度）の動詞形。ビジネスの意思決定で頻出。", status: 1, reviewCount: 0 },
       { rowIndex: 3, word: "streamline", meaning: "業務を効率化・合理化する", example: "The company is streamlining operations to reduce overhead costs.", note: "「流線形にする」から派生。無駄な手順や人的コストを削ぎ落とすニュアンス。", status: 1, reviewCount: 0 },
@@ -556,12 +532,12 @@
       { rowIndex: 18, word: "tentative", meaning: "暫定的な、仮の", example: "We have set a tentative deadline for the proposal submission.", note: "確定前のアポイントや日程調整で非常によく使われる。", status: 1, reviewCount: 0 }
     ];
 
-    const STORAGE_KEY_WORDS = 'distinction_vocab_list_v4';
-    const STORAGE_KEY_GAS_URL = 'distinction_gas_web_app_url_v4';
+    const STORAGE_KEY_WORDS = 'distinction_vocab_list_v6';
+    const STORAGE_KEY_GAS_URL = 'distinction_gas_web_app_url_v6';
     const STORAGE_KEY_AUTO_VOICE = 'distinction_auto_voice_enabled';
     const STORAGE_KEY_FOCUS50 = 'distinction_focus_50_row_indices';
 
-    // 最新のバージョン2デプロイURL
+    // 最新のデプロイURL
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwoZak4hkpZKaaaPwGHOIJbwIBzfXZhfUhLuZ63fsNtJE79Xym0bhAL38HQFk_2yUNF/exec';
 
     const STATUS_MAP = {
@@ -576,17 +552,14 @@
       return 1;
     }
 
-    // Application Global State
     let wordsData = [];
-    let currentMode = 'random'; // 'random' | 'unstudied' | 'focus50' | 'mastered'
+    let currentMode = 'random';
     let currentWord = null;
     let isAnswerRevealed = false;
     let autoVoiceEnabled = true;
     let gasAppUrl = DEFAULT_GAS_URL;
 
-    // 平坦化出題管理用：直近出題された単語のクールダウン履歴（IDのリングバッファ）
     let recentHistory = [];
-    // 50単語セッションのIDリスト
     let focus50RowIndices = [];
 
     const elements = {
@@ -597,14 +570,12 @@
       modeHeaderTag: document.getElementById('modeHeaderTag'),
       bottomBackBtn: document.getElementById('bottomBackBtn'),
 
-      // Menu counts
       menuCountRandom: document.getElementById('menuCountRandom'),
       menuCountUnstudied: document.getElementById('menuCountUnstudied'),
       menuCountFocus50: document.getElementById('menuCountFocus50'),
       menuCountMastered: document.getElementById('menuCountMastered'),
       refreshFocus50Btn: document.getElementById('refreshFocus50Btn'),
 
-      // Card Elements
       cardContainer: document.getElementById('cardContainer'),
       wordHead: document.getElementById('wordHead'),
       wordPhonetic: document.getElementById('wordPhonetic'),
@@ -623,7 +594,6 @@
       autoVoiceIcon: document.getElementById('autoVoiceIcon'),
       autoVoiceLabel: document.getElementById('autoVoiceLabel'),
 
-      // Header summary & badges
       badgeHigh: document.getElementById('badgeHigh'),
       badgeLow: document.getElementById('badgeLow'),
       badgeMastered: document.getElementById('badgeMastered'),
@@ -632,13 +602,11 @@
       progressLow: document.getElementById('progressLow'),
       progressMastered: document.getElementById('progressMastered'),
 
-      // Empty Pool state
       emptyPoolBox: document.getElementById('emptyPoolBox'),
       emptyTitle: document.getElementById('emptyTitle'),
       emptyMessage: document.getElementById('emptyMessage'),
       emptyBackBtn: document.getElementById('emptyBackBtn'),
 
-      // Settings Modal
       syncStatusBtn: document.getElementById('syncStatusBtn'),
       syncDot: document.getElementById('syncDot'),
       syncText: document.getElementById('syncText'),
@@ -652,7 +620,6 @@
       diagnosticOutput: document.getElementById('diagnosticOutput'),
       resetSessionCacheBtn: document.getElementById('resetSessionCacheBtn'),
 
-      // Toast
       toast: document.getElementById('toast'),
       toastMessage: document.getElementById('toastMessage'),
       toastIcon: document.getElementById('toastIcon'),
@@ -697,7 +664,6 @@
       }
     }
 
-    // Audio TTS Logic
     function speakText(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -738,8 +704,7 @@
       if (!focus50RowIndices || focus50RowIndices.length === 0) {
         regenerateFocus50Pool(false);
       }
-      const pool = wordsData.filter(w => focus50RowIndices.includes(w.rowIndex) && w.status !== 3);
-      return pool;
+      return wordsData.filter(w => focus50RowIndices.includes(w.rowIndex) && w.status !== 3);
     }
 
     function regenerateFocus50Pool(notify = true) {
@@ -769,16 +734,12 @@
 
       if (pool.length === 0) return null;
 
-      // クールダウン除外（直近出題された単語を避ける）
       const cooldownSize = Math.max(0, Math.min(8, Math.floor(pool.length * 0.6)));
       const activeCooldownIds = recentHistory.slice(-cooldownSize);
 
       let eligible = pool.filter(w => !activeCooldownIds.includes(w.rowIndex));
-      if (eligible.length === 0) {
-        eligible = pool;
-      }
+      if (eligible.length === 0) eligible = pool;
 
-      // 出題回数平坦化（最小回数グループを最優先）
       const minReviewCount = Math.min(...eligible.map(w => w.reviewCount || 0));
       const lowReviewGroup = eligible.filter(w => (w.reviewCount || 0) <= minReviewCount + 1);
 
@@ -789,8 +750,7 @@
         const lowList = finalCandidates.filter(w => w.status === 2);
 
         if (highList.length > 0 && lowList.length > 0) {
-          const roll = Math.random();
-          finalCandidates = roll < 0.70 ? highList : lowList;
+          finalCandidates = Math.random() < 0.70 ? highList : lowList;
         } else if (highList.length > 0) {
           finalCandidates = highList;
         } else if (lowList.length > 0) {
@@ -799,7 +759,6 @@
       }
 
       const selected = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
-
       recentHistory.push(selected.rowIndex);
       if (recentHistory.length > 20) recentHistory.shift();
 
@@ -942,7 +901,7 @@
       saveLocalWords();
       renderCurrentWord();
 
-      // GASへ非同期送信（CORSプリフライト完全回避 & sendBeaconフォールバック）
+      // GASへ非同期送信（CORSプリフライト回避 & sendBeaconフォールバック）
       if (gasAppUrl && targetRowIndex) {
         setSyncStatus('syncing', 'シート同期中...');
         const payload = JSON.stringify({
@@ -963,7 +922,7 @@
           setSyncStatus('ready', 'シート接続中');
           console.log('GAS同期成功:', { rowIndex: targetRowIndex, status: STATUS_MAP[newStatus], reviewCount: targetWord.reviewCount });
         } catch (err) {
-          console.warn('fetch送信失敗。sendBeaconで再試行します:', err);
+          console.warn('fetch送信失敗。sendBeaconで再試行:', err);
           try {
             const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
             navigator.sendBeacon(gasAppUrl, blob);
@@ -984,48 +943,16 @@
       }
     }
 
-    function fetchJsonp(url, timeoutMs = 8000) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'gas_callback_' + Math.round(100000 * Math.random());
-        const script = document.createElement('script');
-        let timer = null;
-
-        window[callbackName] = (data) => {
-          clearTimeout(timer);
-          cleanup();
-          resolve(data);
-        };
-
-        const cleanup = () => {
-          delete window[callbackName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-        };
-
-        timer = setTimeout(() => {
-          cleanup();
-          reject(new Error('JSONPタイムアウト'));
-        }, timeoutMs);
-
-        script.onerror = () => {
-          clearTimeout(timer);
-          cleanup();
-          reject(new Error('JSONP読み込みエラー'));
-        };
-
-        const delimiter = url.includes('?') ? '&' : '?';
-        script.src = `${url}${delimiter}callback=${callbackName}&_t=${Date.now()}`;
-        document.body.appendChild(script);
-      });
-    }
-
+    // 安定したデータ取得パイプライン（直接fetch ➔ CORSプロキシの2段階フォールバック）
     async function fetchFromGas(url) {
-      if (!url) return;
+      if (!url) return false;
       setSyncStatus('syncing', 'データ取得中...');
       let resJson = null;
 
+      // 1. 直接取得の試行（リダイレクトを自動追従）
       try {
         const response = await fetch(`${url}?_t=${Date.now()}`, { 
-          method: 'GET', 
+          method: 'GET',
           redirect: 'follow',
           headers: { 'Accept': 'application/json' }
         });
@@ -1033,17 +960,10 @@
           resJson = await response.json();
         }
       } catch (e) {
-        console.log('直接fetch非対応、JSONPへフォールバック');
+        console.log('直接fetch制約あり。CORSプロキシへ移行します');
       }
 
-      if (!resJson) {
-        try {
-          resJson = await fetchJsonp(url);
-        } catch (e) {
-          console.log('JSONPフォールバック試行中:', e.message);
-        }
-      }
-
+      // 2. CORSプロキシ経由の取得（ブラウザ制限を完全迂回）
       if (!resJson) {
         try {
           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url + '?_t=' + Date.now())}`;
@@ -1056,6 +976,7 @@
         }
       }
 
+      // データの反映
       if (resJson && (resJson.status === 'success' || Array.isArray(resJson.data) || Array.isArray(resJson))) {
         const rawList = Array.isArray(resJson) ? resJson : (resJson.data || []);
         if (Array.isArray(rawList) && rawList.length > 0) {
@@ -1093,19 +1014,34 @@
       let log = `<strong>診断ログ:</strong><br>`;
       log += `1. 対象URL: ${url.substring(0, 45)}...<br>`;
 
-      log += `2. JSONP通信: `;
+      // 直接通信テスト
+      log += `2. 直接GET通信: `;
       try {
-        const data = await fetchJsonp(url, 5000);
-        if (data && data.status === 'success') {
-          log += `<span class="text-emerald-400">成功！(取得件数: ${data.data.length}語)</span><br>`;
-          log += `<div class="mt-2 text-emerald-300 bg-emerald-500/10 p-1.5 rounded">✔ 正常にスプレッドシートと接続できています！</div>`;
+        const res = await fetch(`${url}?_t=${Date.now()}`, { redirect: 'follow' });
+        if (res.ok) {
+          const data = await res.json();
+          log += `<span class="text-emerald-400">成功！(直接取得: ${data.data?.length || 0}語)</span><br>`;
           out.innerHTML = log;
           return;
-        } else {
-          log += `<span class="text-rose-400">GASエラー (${data.message || 'データなし'})</span><br>`;
         }
+        log += `<span class="text-amber-400">HTTP ${res.status}</span><br>`;
       } catch (err) {
-        log += `<span class="text-amber-400">JSONPエラー (${err.message})</span><br>`;
+        log += `<span class="text-amber-400">CORSブロック（プロキシをテストします）</span><br>`;
+      }
+
+      // プロキシ通信テスト
+      log += `3. CORSプロキシ通信: `;
+      try {
+        const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url + '?_t=' + Date.now())}`);
+        if (proxyRes.ok) {
+          const data = await proxyRes.json();
+          log += `<span class="text-emerald-400">成功！(プロキシ経由: ${data.data?.length || 0}語)</span><br>`;
+          log += `<div class="mt-2 text-emerald-300 bg-emerald-500/10 p-1.5 rounded">✔ スプレッドシートから正常に単語を取得できます！</div>`;
+        } else {
+          log += `<span class="text-rose-400">失敗</span><br>`;
+        }
+      } catch (proxyErr) {
+        log += `<span class="text-rose-400">エラー (${proxyErr.message})</span><br>`;
       }
 
       out.innerHTML = log;
@@ -1164,7 +1100,6 @@
     elements.navBackBtn.addEventListener('click', showMenuScreen);
     elements.bottomBackBtn.addEventListener('click', showMenuScreen);
     elements.emptyBackBtn.addEventListener('click', showMenuScreen);
-
     elements.revealBtn.addEventListener('click', revealAnswer);
 
     elements.playWordAudioBtn.addEventListener('click', (e) => {
