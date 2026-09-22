@@ -2,8 +2,18 @@
 <html lang="ja" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Distinction Vocabulary - Active Recall</title>
+  
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080c15">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Distinction">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3771/3771518.png">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter & Outfit -->
@@ -51,6 +61,7 @@
       font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      touch-action: manipulation;
     }
 
     /* Custom Glassmorphism & Shadows */
@@ -426,19 +437,6 @@ function doPost(e) {
   }
 }</code></pre>
             </div>
-            
-            <!-- Failed to fetch トラブルシューティングガイド -->
-            <div class="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] space-y-1">
-              <div class="font-bold flex items-center gap-1 text-amber-300">
-                <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
-                「Failed to fetch」が出る場合のチェックポイント
-              </div>
-              <ul class="list-disc list-inside space-y-1 text-amber-200/90 pl-1">
-                <li><strong>アクセス権限：</strong>GASの「デプロイを管理」で「アクセスできるユーザー」が<strong>「全員（Anyone）」</strong>になっているか確認（「自分のみ」だとCORSエラーになります）。</li>
-                <li><strong>デプロイの更新：</strong>コード修正後は「新しいデプロイ」または「デプロイを管理」→「編集」→<strong>「新バージョン」</strong>を選択して保存してください。</li>
-                <li><strong>シート名：</strong>スプレッドシートのタブ名が「words」になっているか確認（上記修正コードを貼ればタブ名が何でも自動認識します）。</li>
-              </ul>
-            </div>
           </div>
         </details>
       </div>
@@ -446,13 +444,24 @@ function doPost(e) {
     </div>
   </div>
 
-  <!-- Notification Toast UI (No alerts used) -->
+  <!-- Notification Toast UI -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-slate-700 shadow-2xl text-xs font-medium text-slate-200">
     <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-indigo-400"></i>
     <span id="toastMessage">通知メッセージ</span>
   </div>
 
   <script>
+    // Service Worker の登録 (PWAインストールを有効化)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('PWA Service Worker registered:', reg.scope);
+        }).catch((err) => {
+          console.log('Service Worker registration skipped/failed:', err);
+        });
+      });
+    }
+
     // スプレッドシート（wordsシート）の実データと完全同期した単語マスター
     const DEFAULT_WORDS = [
       {
@@ -600,7 +609,6 @@ function doPost(e) {
     // 固定のGoogle Apps Script Web App URL
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyQznwgR84EXzXAeUTR5uvT0LPe6ked0pyqDC1zyy8fiz5zJnaqwXIH7n9ur2lR-Hpy/exec';
 
-    // ステータスコードとシート文字列の相互変換マップ
     const STATUS_MAP = {
       1: '高頻度',
       2: '低頻度',
@@ -610,7 +618,7 @@ function doPost(e) {
     function parseStatusToNumber(val) {
       if (val === '低頻度' || val === 2 || val === '2') return 2;
       if (val === '非表示' || val === 3 || val === '3') return 3;
-      return 1; // デフォルトは高頻度
+      return 1;
     }
 
     let wordsData = [];
@@ -668,7 +676,6 @@ function doPost(e) {
       if (toastTimeout) clearTimeout(toastTimeout);
       elements.toastMessage.textContent = message;
       
-      const icon = elements.toast.querySelector('i');
       if (type === 'success') {
         elements.toast.className = "fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2.5 px-4 py-3 rounded-2xl glass-panel border border-emerald-500/40 shadow-2xl text-xs font-medium text-emerald-200";
         elements.toastIcon.setAttribute('data-lucide', 'check-circle');
@@ -708,15 +715,14 @@ function doPost(e) {
         showToast('お使いのブラウザは音声合成に対応していません', 'error');
         return;
       }
-      window.speechSynthesis.cancel(); // Stop any pending speech
+      window.speechSynthesis.cancel();
       
       const cleanText = text.replace(/<[^>]*>?/gm, '');
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'en-US';
-      utterance.rate = 0.9; // Natural listening speed as specified
+      utterance.rate = 0.9;
       utterance.pitch = 1.0;
 
-      // Select preferred en-US voice if available
       const voices = window.speechSynthesis.getVoices();
       const usVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Alex')));
       if (usVoice) utterance.voice = usVoice;
@@ -743,26 +749,16 @@ function doPost(e) {
       }
     }
 
-    /**
-     * Distinction Algorithm:
-     * - Status 1 (High Frequency / Unmastered): 70% weight
-     * - Status 2 (Low Frequency / Partial): 30% weight
-     * - Status 3 (Mastered): Excluded from active queue
-     * - Avoid back-to-back repeats of the same word (lastWordId)
-     */
     function pickNextWord() {
       const highList = wordsData.filter(w => w.status === 1);
       const lowList = wordsData.filter(w => w.status === 2);
 
-      // If both pools are empty, all active words have been mastered!
       if (highList.length === 0 && lowList.length === 0) {
         return null;
       }
 
       let chosenList = null;
-
       if (highList.length > 0 && lowList.length > 0) {
-        // 70% chance for High, 30% chance for Low
         const roll = Math.random();
         chosenList = roll < 0.70 ? highList : lowList;
       } else if (highList.length > 0) {
@@ -771,7 +767,6 @@ function doPost(e) {
         chosenList = lowList;
       }
 
-      // Filter out immediate repeat if multiple words exist in pool
       let candidates = chosenList;
       if (candidates.length > 1 && lastWordId !== null) {
         const withoutLast = candidates.filter(w => (w.rowIndex || w.word) !== lastWordId);
@@ -791,7 +786,6 @@ function doPost(e) {
       updateStatsDisplay();
 
       if (!currentWord) {
-        // All words are mastered
         elements.cardContainer.classList.add('hidden');
         elements.allMasteredBox.classList.remove('hidden');
         return;
@@ -802,12 +796,10 @@ function doPost(e) {
 
       lastWordId = currentWord.rowIndex || currentWord.word;
 
-      // Populate Word surface
       elements.wordHead.textContent = currentWord.word;
       elements.wordPhonetic.textContent = currentWord.status === 1 ? 'Focus Word' : 'Review Word';
       elements.cardIndexLabel.textContent = `#${currentWord.rowIndex || '01'}`;
 
-      // Set Status Badge styling
       if (currentWord.status === 1) {
         elements.cardStatusBadge.textContent = "高頻度 (70%)";
         elements.cardStatusBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded-full font-semibold border bg-rose-500/10 text-rose-300 border-rose-500/30";
@@ -816,16 +808,13 @@ function doPost(e) {
         elements.cardStatusBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded-full font-semibold border bg-amber-500/10 text-amber-300 border-amber-500/30";
       }
 
-      // Populate Answer details
       elements.wordMeaning.textContent = currentWord.meaning;
       elements.wordExample.textContent = currentWord.example || "No example sentence provided.";
       elements.wordNote.textContent = currentWord.note || "日常会話およびビジネスの文脈で自然に使われる表現です。";
 
-      // Reset accordion state to closed
       elements.detailsCollapse.classList.remove('open');
       elements.revealActionBox.classList.remove('hidden');
 
-      // Auto speech playback
       if (autoVoiceEnabled) {
         setTimeout(() => {
           speakText(currentWord.word);
@@ -865,27 +854,21 @@ function doPost(e) {
       const targetWord = currentWord;
       const targetRowIndex = targetWord.rowIndex;
 
-      // 1. Optimistic Local State Update
       targetWord.status = newStatus;
       saveLocalWords();
-
-      // 2. Immediate transition to next card (Snappy UI)
       renderCurrentWord();
 
-      // 3. Background Asynchronous POST to Google Apps Script
       if (gasAppUrl && targetRowIndex) {
         setSyncStatus('syncing', 'シート同期中...');
         try {
-          // スプレッドシートのE列形式（'高頻度' / '低頻度' / '非表示'）に変換して送信
           const payload = JSON.stringify({
             rowIndex: targetRowIndex,
             status: STATUS_MAP[newStatus] || '高頻度'
           });
 
-          // Google Apps Script doPost redirects (302) are handled transparently.
           await fetch(gasAppUrl, {
             method: 'POST',
-            mode: 'no-cors', // Essential for seamless GAS Web App posting
+            mode: 'no-cors',
             headers: {
               'Content-Type': 'text/plain;charset=utf-8'
             },
@@ -894,7 +877,7 @@ function doPost(e) {
 
           setSyncStatus('ready', '同期完了');
         } catch (err) {
-          console.warn('GAS Sync warning (cached locally):', err);
+          console.warn('GAS Sync warning:', err);
           setSyncStatus('error', '同期失敗 (ローカル保持)');
         }
       }
@@ -913,17 +896,15 @@ function doPost(e) {
       setSyncStatus('syncing', 'データ取得中...');
       let resJson = null;
 
-      // 1. 直接 fetch の試行
       try {
         const response = await fetch(url, { method: 'GET', redirect: 'follow' });
         if (response.ok) {
           resJson = await response.json();
         }
       } catch (directErr) {
-        console.warn('直接通信が制限されたため、フォールバック接続を試行します:', directErr.message);
+        console.warn('直接通信フォールバック試行:', directErr.message);
       }
 
-      // 2. iframe等のCORS制約を回避するためのフォールバックProxy試行
       if (!resJson) {
         try {
           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
@@ -932,11 +913,10 @@ function doPost(e) {
             resJson = await proxyRes.json();
           }
         } catch (proxyErr) {
-          console.warn('フォールバックProxy通信も失敗しました:', proxyErr.message);
+          console.warn('フォールバック通信失敗:', proxyErr.message);
         }
       }
 
-      // 3. データ適用判定
       if (resJson && (resJson.status === 'success' || Array.isArray(resJson.data) || Array.isArray(resJson))) {
         const rawList = Array.isArray(resJson) ? resJson : (resJson.data || []);
         if (Array.isArray(rawList) && rawList.length > 0) {
@@ -953,22 +933,18 @@ function doPost(e) {
         }
       }
 
-      // 通信が通らない場合でもアプリが停止しないよう、キャッシュ／ローカルデータで継続
       setSyncStatus('warning', 'ローカル動作中');
       showToast('GASのアクセス権限を確認してください（ローカルデータで学習可能）', 'info');
     }
 
     function initData() {
-      // 1. Load auto voice preference
       const autoSaved = localStorage.getItem(STORAGE_KEY_AUTO_VOICE);
       autoVoiceEnabled = autoSaved === null ? true : autoSaved === '1';
       updateAutoVoiceUI();
 
-      // 2. Load GAS App URL (固定URLをデフォルトとして適用)
       gasAppUrl = localStorage.getItem(STORAGE_KEY_GAS_URL) || DEFAULT_GAS_URL;
       elements.gasUrlInput.value = gasAppUrl;
 
-      // 3. Load Cached or Mock Words
       const cached = localStorage.getItem(STORAGE_KEY_WORDS);
       if (cached) {
         try {
@@ -981,10 +957,8 @@ function doPost(e) {
         saveLocalWords();
       }
 
-      // 初回表示
       renderCurrentWord();
 
-      // 4. 固定URLから最新のスプレッドシートデータを自動同期
       if (gasAppUrl) {
         fetchFromGas(gasAppUrl);
       } else {
@@ -992,10 +966,8 @@ function doPost(e) {
       }
     }
 
-    // Reveal Answer Click
     elements.revealBtn.addEventListener('click', revealAnswer);
 
-    // Audio Play Buttons
     elements.playWordAudioBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (currentWord) speakText(currentWord.word);
@@ -1006,10 +978,8 @@ function doPost(e) {
       if (currentWord && currentWord.example) speakText(currentWord.example);
     });
 
-    // Auto Voice Toggle
     elements.toggleAutoVoiceBtn.addEventListener('click', toggleAutoVoice);
 
-    // Rating Buttons (1, 2, 3)
     document.querySelectorAll('.status-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const status = Number(btn.getAttribute('data-status'));
@@ -1017,7 +987,6 @@ function doPost(e) {
       });
     });
 
-    // Reset Mastered
     elements.resetMasteredBtn.addEventListener('click', () => {
       wordsData.forEach(w => w.status = 1);
       saveLocalWords();
@@ -1025,7 +994,6 @@ function doPost(e) {
       renderCurrentWord();
     });
 
-    // Settings Modal
     elements.openSettingsBtn.addEventListener('click', () => {
       elements.settingsModal.classList.remove('hidden');
     });
@@ -1038,7 +1006,6 @@ function doPost(e) {
       }
     });
 
-    // Save GAS URL
     elements.saveGasUrlBtn.addEventListener('click', () => {
       const url = elements.gasUrlInput.value.trim();
       gasAppUrl = url;
@@ -1050,7 +1017,6 @@ function doPost(e) {
       elements.settingsModal.classList.add('hidden');
     });
 
-    // Fetch button in Settings
     elements.fetchGasBtn.addEventListener('click', () => {
       const url = elements.gasUrlInput.value.trim();
       if (!url) {
@@ -1062,7 +1028,6 @@ function doPost(e) {
       fetchFromGas(url);
     });
 
-    // Copy GAS code button
     elements.copyGasCodeBtn.addEventListener('click', () => {
       const code = elements.gasSourceCode.textContent;
       const tempInput = document.createElement('textarea');
@@ -1074,9 +1039,7 @@ function doPost(e) {
       showToast('GASコードをクリップボードにコピーしました', 'success');
     });
 
-    // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
-      // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       const key = e.key.toLowerCase();
