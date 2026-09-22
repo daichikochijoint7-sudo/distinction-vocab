@@ -942,16 +942,16 @@
       saveLocalWords();
       renderCurrentWord();
 
-      // GASへ非同期送信
+// GASへ非同期送信（CORSプリフライト完全回避 & sendBeaconフォールバック）
       if (gasAppUrl && targetRowIndex) {
         setSyncStatus('syncing', 'シート同期中...');
-        try {
-          const payload = JSON.stringify({
-            rowIndex: targetRowIndex,
-            status: STATUS_MAP[newStatus] || '高頻度',
-            reviewCount: targetWord.reviewCount
-          });
+        const payload = JSON.stringify({
+          rowIndex: targetRowIndex,
+          status: STATUS_MAP[newStatus] || '高頻度',
+          reviewCount: targetWord.reviewCount
+        });
 
+        try {
           await fetch(gasAppUrl, {
             method: 'POST',
             mode: 'no-cors',
@@ -960,14 +960,20 @@
             },
             body: payload
           });
-
           setSyncStatus('ready', 'シート接続中');
+          console.log('GAS同期成功:', { rowIndex: targetRowIndex, status: STATUS_MAP[newStatus], reviewCount: targetWord.reviewCount });
         } catch (err) {
-          console.warn('GAS Sync warning:', err);
-          setSyncStatus('warning', 'ローカル保持');
+          console.warn('fetch送信失敗。sendBeaconで再試行します:', err);
+          try {
+            const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
+            navigator.sendBeacon(gasAppUrl, blob);
+            setSyncStatus('ready', 'シート接続中');
+          } catch (beaconErr) {
+            console.error('sendBeacon送信エラー:', beaconErr);
+            setSyncStatus('warning', 'ローカル保持');
+          }
         }
       }
-    }
 
     function saveLocalWords() {
       try {
