@@ -1,0 +1,23 @@
+{
+  "name": "Distinction Flashcards",
+  "short_name": "Distinction",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080c15",
+  "theme_color": "#080c15",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3771/3771518.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/192/3771/3771518.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
