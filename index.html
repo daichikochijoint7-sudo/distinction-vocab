@@ -942,7 +942,7 @@
       saveLocalWords();
       renderCurrentWord();
 
-// GASへ非同期送信（CORSプリフライト完全回避 & sendBeaconフォールバック）
+      // GASへ非同期送信（CORSプリフライト完全回避 & sendBeaconフォールバック）
       if (gasAppUrl && targetRowIndex) {
         setSyncStatus('syncing', 'シート同期中...');
         const payload = JSON.stringify({
@@ -974,6 +974,7 @@
           }
         }
       }
+    }
 
     function saveLocalWords() {
       try {
